@@ -14,6 +14,7 @@ jwt = JWTManager(app)
 
 
 class User(db.Model):
+    __tablename__ = 'User'
     clientID = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     firstName = db.Column(db.String(80), unique=True, nullable=False)
@@ -21,10 +22,12 @@ class User(db.Model):
     email_address = db.Column(db.String(100), unique=True, nullable=False)
     phoneNumber = db.Column(db.String(20), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
-    MessageToUser = db.relationship('MessageToUser', uselist=False)
-    MessageToTradesperson = db.relationship('MessageToTradesperson', uselist=False)
+    # MessageToUser = db.relationship('MessageToUser', uselist=False)
+    # MessageToTradesperson = db.relationship('MessageToTradesperson', uselist=False)
+
 
 class TradesPerson(db.Model):
+    __tablename__ = 'TradesPerson'
     tradesPersonID = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     firstName = db.Column(db.String(80), unique=True, nullable=False)
@@ -34,10 +37,11 @@ class TradesPerson(db.Model):
     trade = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(120), nullable=False)
     MessageToUser = db.relationship('MessageToUser', uselist=False)
-    MessageToTradesperson = db.relationship('MessageToTradesperson', uselist=False)
+    MessageToTradesperson = db.relationship('MessageToTradesPerson', uselist=False)
 
 
 class MessageToUser(db.Model):
+    __tablename__ = 'MessageToUser'
     messageID = db.Column(db.Integer, primary_key=True)
     senderID = db.Column(db.Integer, db.ForeignKey('TradesPerson.tradesPersonID'), nullable=False)
     recipientID = db.Column(db.Integer, db.ForeignKey('User.clientID'), nullable=False)
@@ -46,13 +50,16 @@ class MessageToUser(db.Model):
 
 
 class MessageToTradesPerson(db.Model):
+    __tablename__ = 'MessageToTradesPerson'
     messageID = db.Column(db.Integer, primary_key=True)
     senderID = db.Column(db.Integer, db.ForeignKey('User.clientID'), nullable=False)
     recipientID = db.Column(db.Integer, db.ForeignKey('TradesPerson.tradesPersonID'), nullable=False)
     message = db.Column(db.String(300), nullable=False)
     date_sent = db.Column(db.DateTime, nullable=False)
 
+
 class Review(db.Model):
+    __tablename__ = 'Review'
     reviewID = db.Column(db.Integer, primary_key=True)
     subjectID = db.Column(db.Integer, db.ForeignKey('TradesPerson.tradesPersonID'), nullable=False)
     userID = db.Column(db.Integer, db.ForeignKey('User.clientID'), nullable=False)
@@ -65,7 +72,7 @@ with app.app_context():
     db.create_all()
 
 
-@app.route('/api/signup', methods=['POST'])
+@app.route('/api/signup/trades', methods=['POST'])
 def user_signup():
     data = request.get_json()
 
@@ -73,14 +80,14 @@ def user_signup():
         return jsonify({"message": "User already exists"}), 400
 
     hashed_pw = generate_password_hash(data['password'])
-    new_user = User(usernama=data['username'], firstName=data['firstName'], surname=data['surname'], email_address=data['email_address'], phoneNumber=data['phoneNumber'], trade=data['trade'], password_hash=hashed_pw)
+    new_user = User(username=data['username'], firstName=data['firstName'], surname=data['surname'], email_address=data['email_address'], phoneNumber=data['phoneNumber'], trade=data['trade'], password_hash=hashed_pw)
 
     db.session.add(new_user)
     db.session.commit()
     return jsonify({"message": "User created!"}), 201
 
 
-@app.route('/api/signup', methods=['POST'])
+@app.route('/api/signup/users', methods=['POST'])
 def tradesperson_signup():
     data = request.get_json()
 
@@ -88,7 +95,7 @@ def tradesperson_signup():
         return jsonify({"message": "User already exists"}), 400
 
     hashed_pw = generate_password_hash(data['password'])
-    new_user = User(usernama=data['username'], firstName=data['firstName'], surname=data['surname'], email_address=data['email_address'], phoneNumber=data['phoneNumber'], password_hash=hashed_pw)
+    new_user = User(username=data['username'], firstName=data['firstName'], surname=data['surname'], email_address=data['email_address'], phoneNumber=data['phoneNumber'], password_hash=hashed_pw)
 
     db.session.add(new_user)
     db.session.commit()
@@ -126,7 +133,7 @@ def tradesperson_login():
 def list_users():
     users = User.query.all()
 
-    user_list = [{"id": u.id, "username": u.username, "pw_hash": u.password_hash} for u in users]
+    user_list = [{"id": u.clientID, "username": u.username, "pw_hash": u.password_hash, "firstName": u.firstName, "email_address": u.email_address} for u in users]
     return jsonify(user_list)
 
 
