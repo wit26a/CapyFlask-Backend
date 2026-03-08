@@ -126,7 +126,12 @@ def tradesperson_login():
     return jsonify({"message": "Invalid credentials"}), 401
 
 
+@app.route('/debug/list/tradespeople', methods=['GET'])
+def list_tradespeople():
+    tradespeople = TradesPerson.query.all()
 
+    tradespeople_list = [{"id": u.tradespersonID, "firstName": u.firstName, "surname": u.surname,"pw_hash": u.password_hash, "trade": u.trade} for u in tradespeople]
+    return jsonify(tradespeople_list)
 
 
 @app.route('/debug/users', methods=['GET'])
