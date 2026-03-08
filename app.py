@@ -102,19 +102,19 @@ def tradesperson_signup():
     return jsonify({"message": "User created!"}), 201
 
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login/users', methods=['POST'])
 def user_login():
     data = request.get_json()
     user = User.query.filter_by(username=data['username']).first()
 
     if user and check_password_hash(user.password_hash, data['password']):
-        access_token = create_access_token(identity=str(user.id))
+        access_token = create_access_token(identity=str(user.clientID))
         return jsonify({"token": access_token, "username": user.username}), 200
 
     return jsonify({"message": "Invalid credentials"}), 401
 
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/login/tradesperson', methods=['POST'])
 def tradesperson_login():
     data = request.get_json()
     tradesperson = TradesPerson.query.filter_by(username=data['username']).first()
@@ -137,14 +137,15 @@ def list_users():
     return jsonify(user_list)
 
 
-@app.route('/api/profile', methods=['GET'])
+@app.route('/api/profile/users', methods=['GET'])
 @jwt_required()
 def get_user_profile():
     current_user_id = get_jwt_identity()
     user = User.query.get(current_user_id)
-    return jsonify({"username": user.username, "id": user.id})
+    return jsonify({"username": user.username, "id": user.clientID, "firstName": user.firstName, "email_address": user.email_address, "surname": user.surname, "phoneNumber": user.phoneNumber})
 
-@app.route('/api/profile', methods=['GET'])
+
+@app.route('/api/profile/tradesperson', methods=['GET'])
 @jwt_required()
 def get_tradesperson_profile():
     current_user_id = get_jwt_identity()
